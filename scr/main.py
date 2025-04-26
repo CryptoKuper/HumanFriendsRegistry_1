@@ -25,7 +25,7 @@ def main():
             name = input("Имя животного: ")
             command = input("Новая команда: ")
             print(registry.train_animal(name, command))
-        elif choice == "4":
+        elif choice == "":
             break
 
 if __name__ == "__main__":
