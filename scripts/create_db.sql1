@@ -1,0 +1,22 @@
+CREATE DATABASE Друзья_человека;
+USE Друзья_человека;
+
+CREATE TABLE Animals (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    commands VARCHAR(100),
+    birth_date DATE,
+    type ENUM('Домашние', 'Вьючные')
+);
+
+CREATE TABLE HomeAnimals (
+    id INT PRIMARY KEY,
+    subtype ENUM('Собака', 'Кошка', 'Хомяк'),
+    FOREIGN KEY (id) REFERENCES Animals(id)
+);
+
+CREATE TABLE PackAnimals (
+    id INT PRIMARY KEY,
+    subtype ENUM('Лошадь', 'Верблюд', 'Осел'),
+    FOREIGN KEY (id) REFERENCES Animals(id)
+);
