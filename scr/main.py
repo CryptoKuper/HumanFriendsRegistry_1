@@ -1,74 +1,106 @@
 from animals import DomesticAnimal, PackAnimal
+from registry import Registry
+from datetime import datetime
 
-class Registry:
-    def __init__(self):
-        self.animals = []
+def validate_animal_type(input_type: str) -> str:
+    """Проверяет и возвращает нормализованный тип животного."""
+    input_type = input_type.strip().lower()
+    valid_domestic = {"домашние", "дом", "д"}
+    valid_pack = {"вьючные", "вьюк", "в"}
+    
+    while True:
+        if input_type in valid_domestic:
+            return "домашние"
+        elif input_type in valid_pack:
+            return "вьючные"
+        print(f"Ошибка! '{input_type}' недопустимый тип. Используйте: домашние/вьючные.")
+        input_type = input("Повторите ввод: ").strip().lower()
 
-    def add_animal(self, name, commands, birth_date, animal_type, subtype):
-        """14.1 Завести новое животное"""
-        if animal_type.lower() == "домашние":
-            animal = DomesticAnimal(name, commands, birth_date, subtype)
-        elif animal_type.lower() == "вьючные":
-            animal = PackAnimal(name, commands, birth_date, subtype)
-        else:
-            raise ValueError("Некорректный тип животного")
-        self.animals.append(animal)
-        return f"{name} успешно добавлен!"
-
-    def get_commands(self, name):
-        """14.3 Увидеть список команд"""
-        for animal in self.animals:
-            if animal._name == name:
-                return animal.get_commands()
-        return "Животное не найдено"
-
-    def train_animal(self, name, new_command):
-        """14.4 Обучить новой команде"""
-        for animal in self.animals:
-            if animal._name == name:
-                animal.add_command(new_command)
-                return f"{name} обучен команде: {new_command}"
-        return "Животное не найдено"
+def validate_date(input_date: str) -> str:
+    """Проверяет корректность формата даты."""
+    while True:
+        try:
+            datetime.strptime(input_date, "%Y-%m-%d")
+            return input_date
+        except ValueError:
+            print(f"Некорректный формат даты: '{input_date}'. Используйте ГГГГ-ММ-ДД.")
+            input_date = input("Введите дату рождения: ").strip()
 
 def main_menu():
-    """14.5 Навигация по меню"""
     registry = Registry()
+    
     while True:
         print("\n=== Реестр животных ===")
-        print("1. Добавить новое животное")
-        print("2. Посмотреть команды животного")
+        print("1. Добавить животное")
+        print("2. Просмотреть команды животного")
         print("3. Обучить животное новой команде")
-        print("4. Выход")
+        print("4. Показать всех животных")
+        print("5. Выход")
         
-        choice = input("Выберите действие: ")
+        choice = input("Выберите действие: ").strip()
         
+        # Добавление животного
         if choice == "1":
-            name = input("Имя животного: ")
-            commands = input("Команды (через запятую): ").split(',')
-            birth_date = input("Дата рождения (ГГГГ-ММ-ДД): ")
-            animal_type = input("Тип (Домашние/Вьючные): ")
-            subtype = input("Подтип (например, Собака, Лошадь): ")
-            
             try:
-                print(registry.add_animal(name, commands, birth_date, animal_type, subtype))
+                name = input("Имя животного: ").strip()
+                if not name:
+                    raise ValueError("Имя не может быть пустым!")
+                
+                commands = [cmd.strip() for cmd in input("Команды (через запятую): ").split(',') if cmd.strip()]
+                
+                birth_date = validate_date(
+                    input("Дата рождения (ГГГГ-ММ-ДД): ").strip()
+                )
+                
+                animal_type = validate_animal_type(
+                    input("Тип (домашние/вьючные): ").strip()
+                )
+                
+                subtype = input("Подтип (например, Собака, Лошадь): ").strip()
+                if not subtype:
+                    raise ValueError("Подтип не может быть пустым!")
+                
+                # Создание объекта
+                if animal_type == "домашние":
+                    animal = DomesticAnimal(name, commands, birth_date, subtype)
+                else:
+                    animal = PackAnimal(name, commands, birth_date, subtype)
+                
+                registry.add_animal(animal)
+                print(f"\033[92m{name} ({subtype}) успешно добавлен!\033[0m")
+                
             except Exception as e:
-                print(f"Ошибка: {e}")
+                print(f"\033[91mОшибка: {e}\033[0m")
 
+        # Просмотр команд
         elif choice == "2":
-            name = input("Введите имя животного: ")
-            print(registry.get_commands(name))
+            name = input("Введите имя животного: ").strip()
+            commands = registry.list_commands(name)
+            if commands:
+                print(f"Команды {name}: {', '.join(commands)}")
+            else:
+                print(f"\033[93mЖивотное с именем '{name}' не найдено.\033[0m")
 
+        # Обучение команде
         elif choice == "3":
-            name = input("Введите имя животного: ")
-            command = input("Введите новую команду: ")
-            print(registry.train_animal(name, command))
+            name = input("Введите имя животного: ").strip()
+            new_command = input("Введите новую команду: ").strip()
+            result = registry.train_animal(name, new_command)
+            print(result)
 
+        # Показать всех животных
         elif choice == "4":
-            print("Выход из программы")
+            print("\nСписок всех животных:")
+            for animal in registry.animals:
+                print(f"- {animal._name} ({animal._subtype}), команды: {', '.join(animal._commands)}")
+
+        # Выход
+        elif choice == "5":
+            print("Выход из программы.")
             break
 
         else:
-            print("Некорректный ввод, попробуйте снова")
+            print("\033[93mНекорректный выбор. Попробуйте снова.\033[0m")
 
 if __name__ == "__main__":
     main_menu()
